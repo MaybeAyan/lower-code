@@ -1,27 +1,28 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js + TypeScript App"/>
+  <div class="app">
+    <Editor v-model="state" />
+  </div>
 </template>
 
-<script lang="ts">
-import { Options, Vue } from 'vue-class-component';
-import HelloWorld from './components/HelloWorld.vue';
+<script lang="ts" setup>
+import {provide, ref} from 'vue'
+import data from './data.json'
+import Editor from './packages/editor'
+import {registerConfig as config} from './utils/editor-config'
 
-@Options({
-  components: {
-    HelloWorld,
-  },
-})
-export default class App extends Vue {}
+
+const state:any = ref(data)
+
+provide('config',config) // 注入组件的配置
+provide('data',state)
 </script>
 
 <style lang="scss">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
+  .app {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+  }
 </style>

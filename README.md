@@ -1,24 +1,8 @@
-# lower-code
+## lower-code 
 
-## Project setup
-```
-npm install
-```
+#### 配置假数据，根据位置渲染内容
 
-### Compiles and hot-reloads for development
+#### 配置组件对应的映射关系
+```typescript
+  {preview:xxx,render:xxx}
 ```
-npm run serve
-```
-
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
