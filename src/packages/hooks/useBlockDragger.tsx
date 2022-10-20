@@ -3,7 +3,11 @@ import { events } from '../mitt/events'
 
 export function useBlockDragger(focusData: any, lastSelectBlock: any, data: any) {
 
-  let dragState: any
+  let dragState: any = {
+    x: null,
+    y: null,
+    dragging: false
+  }
   const markline = reactive({
     x: null,
     y: null
@@ -63,7 +67,7 @@ export function useBlockDragger(focusData: any, lastSelectBlock: any, data: any)
     if (!dragState.dragging) {
       dragState.dragging = true;
 
-      // 触发事件
+      // 触发事件,记住拖拽前位置
       events.emit('start')
     }
 
@@ -107,6 +111,10 @@ export function useBlockDragger(focusData: any, lastSelectBlock: any, data: any)
     // 清空辅助线
     markline.x = null
     markline.y = null
+
+    if (dragState.dragging) {
+      events.emit('end')
+    }
   }
 
   return {

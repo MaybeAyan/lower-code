@@ -5,6 +5,7 @@ import deepcopy from 'deepcopy'
 import { useMenuDragger } from './hooks/useMenuDragger'
 import { useFocus } from './hooks/useFocus'
 import { useCommand } from './hooks/useCommand'
+import { $dialog } from '@/components/Dialog'
 
 
 const editor = defineComponent({
@@ -46,7 +47,13 @@ const editor = defineComponent({
     const { commands } = useCommand(data)
     const btns = [
       { label: '撤销', handler: () => commands.undo() },
-      { label: '重做', handler: () => commands.redo() }
+      { label: '重做', handler: () => commands.redo() },
+      {
+        label: '导出', handler: () => {
+          $dialog({})
+        }
+      },
+      { label: '导入', handler: () => console.log('导入') }
     ]
 
     return () => {

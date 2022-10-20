@@ -109,8 +109,46 @@ export function useCommand(data: any) {
     }
   });
 
+  const keyboardEvent = (() => {
+    const onKeydown = (e: KeyboardEvent) => {
+      const keyCodes: any = {
+        90: 'z',
+        89: 'y'
+      }
+
+      const { ctrlKey, keyCode } = e
+
+      let KeyString: any = [];
+      if (ctrlKey) KeyString.push('ctrl')
+      KeyString.push(keyCodes[keyCode])
+      KeyString = KeyString.join('+')
+
+      state.commandArr.forEach((item: any) => {
+        if (!item.keyboard) return;
+
+        if (item.keyboard == KeyString) {
+          state.commands[item.name]();
+          e.preventDefault();
+        }
+      });
+    }
+
+    const init = () => { //初始化事件
+      window.addEventListener('keydown', onKeydown)
+      return () => {  // 销毁事件
+        window.removeEventListener('keydown', onKeydown)
+      }
+    }
+    return init
+  })();
+
   (() => {
+
+    // 监听键盘事件
+
     state.commandArr.forEach(((command: any) => command.init && state.destroyList.push(command.init())))
+
+    state.destroyList.push(keyboardEvent())
   })();
 
   onUnmounted(() => {
