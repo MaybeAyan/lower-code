@@ -1,3 +1,5 @@
+import { events } from "../mitt/events"
+
 export function useMenuDragger(containerRef:any,data:any){
   let currentComponent: any = null
 
@@ -37,6 +39,8 @@ export function useMenuDragger(containerRef:any,data:any){
     containerRef.value?.addEventListener('dragleave', dragleave)
     containerRef.value?.addEventListener('drop', drop)
     currentComponent = component
+
+    events.emit('start') // 发布事件
   }
 
 
@@ -46,6 +50,7 @@ export function useMenuDragger(containerRef:any,data:any){
     containerRef.value?.removeEventListener('dragleave', dragleave)
     containerRef.value?.removeEventListener('drop', drop)
     currentComponent = null
+    events.emit('end')
   }
 
   return {

@@ -68,6 +68,32 @@
     background-color: #fff;
     // border-radius: 5px;
     border-bottom: 1px solid gray;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &-button {
+      height: 30px;
+      width: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background-color: rgba(1, 77, 163, 0.7);
+      border-radius: 5px;
+      user-select: none;
+
+      &+&{
+        margin-left: 6px;
+      }
+
+      button{
+        border: none;
+        background-color: transparent;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
+      }
+    }
   }
 
   &-container {
@@ -109,4 +135,20 @@
   &::after{
     border: 2px #000 dashed;
   }
+}
+
+
+.line-x {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px dashed red ;
+}
+
+
+.line-y {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 1px dashed red ;
 }

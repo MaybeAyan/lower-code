@@ -1,6 +1,7 @@
 import { reactive } from 'vue'
+import { events } from '../mitt/events'
 
-export function useBlockDragger(focusData: any, lastSelectBlock: any) {
+export function useBlockDragger(focusData: any, lastSelectBlock: any, data: any) {
 
   let dragState: any
   const markline = reactive({
@@ -17,6 +18,7 @@ export function useBlockDragger(focusData: any, lastSelectBlock: any) {
       startY: e.clientY,
       startLeft: lastSelectBlock.value.left,
       startTop: lastSelectBlock.value.top,
+      dragging: false,
       startPos: focusData.value.focus.map((item: any) => ({
         top: item.top,
         left: item.left
@@ -24,13 +26,18 @@ export function useBlockDragger(focusData: any, lastSelectBlock: any) {
       lines: (() => {
         const { unfocused } = focusData.value
 
-        const lines: any = { x: [], y: [] } // 存放辅助线的位置
-        unfocused.forEach((item: any) => {
+        const lines: any = { x: [], y: [] }; // 存放辅助线的位置
+        [...unfocused, {
+          top: 0,
+          left: 0,
+          width: data.value.container.width,
+          height: data.value.container.height
+        }].forEach((item: any) => {
           const { top: ATop, left: ALeft, width: AWidth, height: AHeight } = item
 
           lines.y.push({ showTop: ATop, top: ATop }) //顶对顶
-          lines.y.push({ showTop: ATop, top: BHeight }) // 顶部对底部
-          lines.y.push({ showTop: ATop + AHeight / 2, top: ATop - AHeight / 2 - BHeight / 2 }) // 中-中
+          lines.y.push({ showTop: ATop, top: ATop - BHeight }) // 顶部对底部
+          lines.y.push({ showTop: ATop + AHeight / 2, top: ATop + AHeight / 2 - BHeight / 2 }) // 中-中
           lines.y.push({ showTop: ATop + AHeight, top: ATop + AHeight }) // 底部对顶部
           lines.y.push({ showTop: ATop + AHeight, top: ATop + AHeight - BHeight }) // 底部对底部
 
@@ -52,6 +59,13 @@ export function useBlockDragger(focusData: any, lastSelectBlock: any) {
 
   const mousemove = (e: MouseEvent) => {
     let { clientX: moveX, clientY: moveY } = e
+
+    if (!dragState.dragging) {
+      dragState.dragging = true;
+
+      // 触发事件
+      events.emit('start')
+    }
 
     // 收集鼠标移动后的坐标
     const left = moveX - dragState.startX + dragState.startLeft
@@ -89,6 +103,10 @@ export function useBlockDragger(focusData: any, lastSelectBlock: any) {
   const mouseup = () => {
     document.removeEventListener('mousemove', mousemove)
     document.removeEventListener('mouseup', mouseup)
+
+    // 清空辅助线
+    markline.x = null
+    markline.y = null
   }
 
   return {
