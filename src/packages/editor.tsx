@@ -1,4 +1,4 @@
-import { computed, inject, ref, defineComponent } from 'vue'
+import { computed, inject, ref, defineComponent, SetupContext } from 'vue'
 import './editor.scss'
 import EditorBlock from './editor-block'
 import deepcopy from 'deepcopy'
@@ -16,7 +16,11 @@ const editor = defineComponent({
     }
   },
 
-  setup(props: any, ctx: any) {
+  setup(props, ctx: SetupContext) {
+
+
+    // 预览模式
+    const previewFlag = ref(false)
 
     // 双向绑定数据
     const data = computed({
@@ -40,20 +44,46 @@ const editor = defineComponent({
     const { dragstart, dragend } = useMenuDragger(containerRef, data)
 
     // 实现获取焦点，选中后可拖拽
-    const { containerMousedown, focusData, clearBlockFocus } = useFocus(data)
+    const { containerMousedown, focusData, clearBlockFocus } = useFocus(data, previewFlag)
 
     const config: any = inject('config')
 
-    const { commands } = useCommand(data)
+    const { commands } = useCommand(data, focusData)
     const btns = [
       { label: '撤销', handler: () => commands.undo() },
       { label: '重做', handler: () => commands.redo() },
       {
         label: '导出', handler: () => {
-          $dialog({})
+          $dialog({
+            title: '导出 Json 使用',
+            content: JSON.stringify(data.value),
+            footer: true,
+          })
         }
       },
-      { label: '导入', handler: () => console.log('导入') }
+      {
+        label: '导入', handler: () => {
+          $dialog({
+            title: '导入 Json 使用',
+            content: '',
+            footer: true,
+            onConfirm(text: any) {
+              // 无法获取重做撤销的队列
+              // data.value = JSON.parse(text)
+              commands.updateContainer(JSON.parse(text));
+            }
+          })
+        }
+      },
+      { label: '置顶', handler: () => commands.placeTop() },
+      { label: '置底', handler: () => commands.placeBottom() },
+      { label: '删除', handler: () => commands.delete() },
+      {
+        label: () => previewFlag.value ? '编辑' : '预览', handler: () => {
+          previewFlag.value = !previewFlag.value;
+          clearBlockFocus();
+        }
+      },
     ]
 
     return () => {
@@ -76,9 +106,10 @@ const editor = defineComponent({
             ))}
           </div>
           <div class={"editor-top"}>
-            {btns.map((btn, index) => {
+            {btns.map((btn) => {
+              const label = typeof btn.label === 'function' ? btn.label() : btn.label;
               return <div class={"editor-top-button"} onClick={btn.handler}>
-                <button>{btn.label}</button>
+                <button>{label}</button>
               </div>
             })}
           </div>
@@ -100,6 +131,7 @@ const editor = defineComponent({
                       indexblock={index}
                       focusData={focusData}
                       clearBlockFocus={clearBlockFocus}
+                      previewFlag={previewFlag}
                     ></EditorBlock>
                   )))
                 }

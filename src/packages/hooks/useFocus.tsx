@@ -1,6 +1,6 @@
-import { computed } from 'vue'
+import { computed, Ref } from 'vue'
 
-export function useFocus(data: any) {
+export function useFocus(data: any, previewFlag: Ref<boolean>) {
   const focusData = computed(() => {
     const focus: any[] = []
     const unfocused: any[] = []
@@ -15,6 +15,7 @@ export function useFocus(data: any) {
 
   // 清空焦点
   const containerMousedown = () => {
+    if (previewFlag.value) return
     clearBlockFocus()
   }
 

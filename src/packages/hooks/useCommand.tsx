@@ -2,7 +2,7 @@ import deepcopy from "deepcopy";
 import { onUnmounted } from "vue";
 import { events } from "../mitt/events";
 
-export function useCommand(data: any) {
+export function useCommand(data: any, focusData: any) {
 
   // 前进后退的指针
   const state: any = {
@@ -16,8 +16,8 @@ export function useCommand(data: any) {
 
   const registry = (command: any) => {
     state.commandArr.push(command);
-    state.commands[command.name] = () => {
-      const { redo, undo } = command.execute()
+    state.commands[command.name] = (...args: any[]) => {
+      const { redo, undo } = command.execute(...args)
       redo()
 
       if (!command.pushQueue) {
@@ -107,7 +107,109 @@ export function useCommand(data: any) {
         }
       }
     }
-  });
+  })
+
+  registry({
+    name: 'updateContainer',
+    pushQueue: true,
+    execute(newValue: any) {
+      const state = {
+        before: data.value,
+        after: newValue
+      }
+      return {
+        redo: () => {
+          data.value = state.after
+        },
+        undo: () => {
+          data.value = state.before
+        }
+      }
+    }
+  })
+
+  registry({
+    name: 'placeTop',
+    pushQueue: true,
+    execute() {
+      const before = deepcopy(data.value.blocks)
+      const after = (() => {
+        const { focus, unfocused } = focusData.value
+
+        const maxZIndex = unfocused.reduce((prev: any, block: any) => {
+          return Math.max(prev, block.zIndex)
+        }, -Infinity)
+
+        // 比当前选中的最大层级+1
+        focus.forEach((block: any) => block.zIndex = maxZIndex + 1);
+        return data.value.blocks
+      })()
+
+      return {
+        undo: () => {
+          data.value = { ...data.value, blocks: before }
+        },
+        redo: () => {
+          data.value = { ...data.value, blocks: after }
+        }
+      }
+    }
+  })
+
+  registry({
+    name: 'placeBottom',
+    pushQueue: true,
+    execute() {
+      const before = deepcopy(data.value.blocks)
+      const after = (() => {
+        const { focus, unfocused } = focusData.value
+
+        let minZIndex = unfocused.reduce((prev: any, block: any) => {
+          return Math.min(prev, block.zIndex)
+        }, Infinity) - 1
+
+        if (minZIndex < 0) {
+          const dur = Math.abs(minZIndex)
+          minZIndex = 0;
+          unfocused.forEach((block: any) => block.zIndex += dur);
+        }
+
+        focus.forEach((block: any) => block.zIndex = minZIndex - 1);
+        return data.value.blocks
+      })()
+
+      return {
+        undo: () => {
+          data.value = { ...data.value, blocks: before }
+        },
+        redo: () => {
+          data.value = { ...data.value, blocks: after }
+        }
+      }
+    }
+  })
+
+  registry({
+    name: 'delete', //删除
+    pushQueue: true,
+    execute() {
+      const state = {
+        before: deepcopy(data.value.blocks),
+        after: focusData.value.unfocused
+      }
+      return {
+        redo: () => {
+          data.value = { ...data.value, blocks: state.after }
+        },
+        undo: () => {
+          data.value = { ...data.value, blocks: state.before }
+
+        }
+      }
+    }
+  })
+
+
 
   const keyboardEvent = (() => {
     const onKeydown = (e: KeyboardEvent) => {

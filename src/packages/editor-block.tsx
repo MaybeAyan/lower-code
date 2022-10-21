@@ -15,6 +15,9 @@ const EditorBlock = defineComponent({
     },
     indexblock: {
       type: Number
+    },
+    previewFlag: {
+      type: Object
     }
   },
   setup(props: any, ctx: any) {
@@ -44,6 +47,8 @@ const EditorBlock = defineComponent({
     const { mousedown, markline } = useBlockDragger(props.focusData, lastSelectBlock, data)
 
     const blockMousedown = (e: MouseEvent, block: any, index: number) => {
+      if (props.previewFlag.value) return
+
       // 阻止默认事件和冒泡行为
       e.preventDefault()
       e.stopPropagation()
@@ -90,7 +95,7 @@ const EditorBlock = defineComponent({
       return (
         <>
           <div
-            class={["editor-block", block.value.focus ? 'editor-block-focus' : '']}
+            class={["editor-block", block.value.focus ? 'editor-block-focus' : '', props.previewFlag.value ? 'editor-bolck-preview' : '']}
             style={blockStyle.value as any}
             ref={blockRef}
             onMousedown={(e: MouseEvent) => blockMousedown(e, block, props.indexblock)}>
