@@ -1,6 +1,8 @@
 import deepcopy from "deepcopy"
 import { computed, defineComponent, inject, onMounted, ref } from "vue"
 import { useBlockDragger } from "./hooks/useBlockDragger"
+import { events } from "./mitt/events";
+
 
 const EditorBlock = defineComponent({
   props: {
@@ -68,7 +70,8 @@ const EditorBlock = defineComponent({
         }
       }
 
-      select.value = index
+      select.value = index;
+      events.emit('idx', index)
       mousedown(e)
     }
 
@@ -90,7 +93,9 @@ const EditorBlock = defineComponent({
     return () => {
       // render渲染标签
       const component = config.componentMap[props.block.key] // 对应的组件配置信息
-      const RenderComponent = component.render()  // 组件渲染的标签
+      const RenderComponent = component.render({
+        props: props.block.props
+      })  // 组件渲染的标签
 
       return (
         <>

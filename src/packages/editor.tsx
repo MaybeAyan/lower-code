@@ -6,6 +6,9 @@ import { useMenuDragger } from './hooks/useMenuDragger'
 import { useFocus } from './hooks/useFocus'
 import { useCommand } from './hooks/useCommand'
 import { $dialog } from '@/components/Dialog'
+import EditorOperator from './editor-operator'
+import { events } from "./mitt/events";
+import { ElButton } from "element-plus";
 
 
 const editor = defineComponent({
@@ -21,6 +24,7 @@ const editor = defineComponent({
 
     // 预览模式
     const previewFlag = ref(false)
+    const editorRef = ref(true)
 
     // 双向绑定数据
     const data = computed({
@@ -84,61 +88,98 @@ const editor = defineComponent({
           clearBlockFocus();
         }
       },
+      { label: '关闭', handler: () => { editorRef.value = false; clearBlockFocus(); } }
+
     ]
+
+
+    const SelectBlock = ref<object>()
+
+    events.on('idx', (idx: any) => {
+      SelectBlock.value = data.value.blocks[idx]
+    })
+
 
     return () => {
 
-
       return (
-        <div class={"editor"}>
-          <div class={"editor-left"}>
-            {/* 根据注册列表 渲染对应的内容 实现拖拽 */}
-            {config.componentList.map((component: any) => (
-              <div
-                class={"editor-left-item"}
-                draggable
-                onDragstart={e => dragstart(e, component)}
-                onDragend={dragend}
-              >
-                <span>{component.label}</span>
-                <div>{component.preview()}</div>
-              </div>
-            ))}
-          </div>
-          <div class={"editor-top"}>
-            {btns.map((btn) => {
-              const label = typeof btn.label === 'function' ? btn.label() : btn.label;
-              return <div class={"editor-top-button"} onClick={btn.handler}>
-                <button>{label}</button>
-              </div>
-            })}
-          </div>
-          <div class={"editor-right"}>属性控制板块</div>
-          <div class={"editor-container"}>
-            {/* 滚动条 */}
-            <div class={"editor-container-canvas"}>
-              {/* 产生内容区域 */}
-              <div
-                class={"editor-container-canvas_content"}
-                style={containerStyles.value}
-                ref={containerRef}
-                onMousedown={containerMousedown}
-              >
-                {
-                  (data.value.blocks.map((block: any, index: number) => (
-                    <EditorBlock
-                      block={block}
-                      indexblock={index}
-                      focusData={focusData}
-                      clearBlockFocus={clearBlockFocus}
-                      previewFlag={previewFlag}
-                    ></EditorBlock>
-                  )))
-                }
+        !editorRef.value ?
+          <div>
+            <div
+              class={"editor-container-canvas_content"}
+              style={[containerStyles.value, "margin:0"]}
+            >
+              {
+                (data.value.blocks.map((block: any, index: number) => (
+                  <EditorBlock
+                    block={block}
+                    indexblock={index}
+                    focusData={focusData}
+                    clearBlockFocus={clearBlockFocus}
+                    previewFlag={previewFlag}
+                  ></EditorBlock>
+                )))
+              }
+            </div>
+            <div><ElButton type="primary" onClick={() => editorRef.value = true}>继续编辑</ElButton></div>
+          </div> :
+          <div class={"editor"}>
+            <div class={"editor-left"}>
+              {/* 根据注册列表 渲染对应的内容 实现拖拽 */}
+              {config.componentList.map((component: any) => (
+                <div
+                  class={"editor-left-item"}
+                  draggable
+                  onDragstart={e => dragstart(e, component)}
+                  onDragend={dragend}
+                >
+                  <span>{component.label}</span>
+                  <div>{component.preview()}</div>
+                </div>
+              ))}
+            </div>
+            <div class={"editor-top"}>
+              {btns.map((btn) => {
+                const label = typeof btn.label === 'function' ? btn.label() : btn.label;
+                return <div class={"editor-top-button"} onClick={btn.handler}>
+                  <button>{label}</button>
+                </div>
+              })}
+            </div>
+            <div class={"editor-right"}>
+              {/* 右侧属性操作栏 */}
+              <EditorOperator
+                data={data.value}
+                block={SelectBlock.value}
+              // updateContainer={commands.updateContainer}
+              // updateBlock={commands.updateBlock}
+              ></EditorOperator>
+            </div>
+            <div class={"editor-container"}>
+              {/* 滚动条 */}
+              <div class={"editor-container-canvas"}>
+                {/* 产生内容区域 */}
+                <div
+                  class={"editor-container-canvas_content"}
+                  style={containerStyles.value}
+                  ref={containerRef}
+                  onMousedown={containerMousedown}
+                >
+                  {
+                    (data.value.blocks.map((block: any, index: number) => (
+                      <EditorBlock
+                        block={block}
+                        indexblock={index}
+                        focusData={focusData}
+                        clearBlockFocus={clearBlockFocus}
+                        previewFlag={previewFlag}
+                      ></EditorBlock>
+                    )))
+                  }
+                </div>
               </div>
             </div>
-          </div>
-        </div >
+          </div >
       )
     }
 
